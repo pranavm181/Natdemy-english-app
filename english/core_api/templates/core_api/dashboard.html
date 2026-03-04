@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natdemy | Admin Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core_api/style.css' %}">
+</head>
+<body>
+
+    <!-- CSRF Token for JS use -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-overlay active">
+        <div class="login-card glass animate-in">
+            <div class="logo">
+                <span class="icon">✨</span>
+                Natdemy Admin
+            </div>
+            <h2 style="margin-bottom: 0.5rem;">Welcome Back</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.875rem;">Please log in to manage your academy.</p>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="admin_user" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Enter Command Center</button>
+            </form>
+            <div id="login-error" style="color: var(--danger); margin-top: 1rem; font-size: 0.875rem; text-align: center; display: none;">
+                Invalid credentials or not a superuser.
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container" id="dashboard-ui" style="display: none;">
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar glass" id="sidebar">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 3rem;">
+                <div class="logo" style="margin-bottom:0;">
+                    <span class="icon">✨</span>
+                    Natdemy
+                </div>
+                <button class="mobile-close" onclick="toggleSidebar()">✕</button>
+            </div>
+            
+            <nav class="menu">
+                <a class="menu-item active" data-page="home">
+                    <span>🏠</span> Overview
+                </a>
+                <a class="menu-item" data-page="students">
+                    <span>👥</span> Students
+                </a>
+                <a class="menu-item" data-page="listening">
+                    <span>🎧</span> Listening
+                </a>
+                <a class="menu-item" data-page="reading">
+                    <span>📖</span> Reading
+                </a>
+                <a class="menu-item" data-page="writing">
+                    <span>✍️</span> Writing
+                </a>
+                <a class="menu-item" data-page="learning">
+                    <span>🧠</span> Grammar
+                </a>
+            </nav>
+
+            <div style="margin-top: auto;">
+                <a class="menu-item" id="logout-btn" style="color: var(--danger);">
+                    <span>🚪</span> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header class="top-bar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="menu-toggle" class="btn btn-sm" style="padding: 0.5rem; background: rgba(255,255,255,0.05);" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <div class="header-title">
+                        <h1 id="page-title">Overview</h1>
+                        <p id="page-subtitle">A summary of your academy's performance today.</p>
+                    </div>
+                </div>
+                
+                <div id="search-container" style="display: none; position: relative; margin-left: 2rem; flex-grow: 1; max-width: 400px;">
+                    <input type="text" id="admin-search" placeholder="Search..." class="form-input" style="padding-left: 2.5rem; width: 100%;">
+                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.8rem; opacity: 0.5;">🔍</span>
+                </div>
+
+                <div class="user-profile" style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn btn-primary" id="add-btn" style="display: none;" onclick="openEntityModal()">+ Add New</button>
+                    <span id="admin-name" style="font-weight: 500;">Admin User</span>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <div id="main-view" class="animate-in">
+                <!-- Dashboard Home (Initial) -->
+                ...
+            </div>
+            
+            <div id="pagination-controls" style="display: none; margin-top: 1.5rem; justify-content: center; align-items: center; gap: 1rem; padding: 1rem;"></div>
+        </main>
+    </div>
+
+    <div id="entity-modal" class="modal-overlay">
+        <div class="login-card glass animate-in" style="max-width: 600px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                <h2 id="modal-title">Edit Entry</h2>
+                <button class="btn" style="background:transparent; color:var(--text-muted);" onclick="closeModal()">✕</button>
+            </div>
+            
+            <form id="entity-form">
+                <div id="form-fields" style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1.5rem;">
+                    <!-- Dynamic -->
+                </div>
+                <div style="display:flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn" style="background:rgba(255,255,255,0.05);" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'core_api/dashboard.js' %}"></script>
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal-overlay">
+        <div class="glass animate-in" style="width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 2rem; position: relative;">
+            <button class="mobile-close" style="position: absolute; right: 1.5rem; top: 1.5rem; display: block !important;" onclick="closeReportModal()">✕</button>
+            <div id="report-content">
+                <!-- Data will be injected here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# Walkthrough - Natdemy English App Enhancements
+
+We have successfully rebuilt the API to be professional, secure, and user-focused. All features are now consolidated under unified endpoints.
+
+## 1. Professional API Consolidation
+All skill-related logic is now part of the [StudentViewSet](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/core_api/views.py#17-96). Instead of fragmented URLs, everything is organized under `/api/students/`.
+
+### Optimized Student Endpoints:
+- **`GET /api/students/detailed_dashboard/`**: Complete progress overview (XP, Level, Gemini stats).
+- **`GET /api/students/section_reports/`**: Detailed analysis for Listening, Speaking, Reading, Writing, and Learning.
+- **`GET /api/students/current_listening/`**: Get a random video lesson and quiz.
+- **`GET /api/students/current_learning/`**: Get the current Grammar Chapter with examples and quiz.
+- **`GET /api/students/current_reading/`**: Get a random story and associated questions.
+- **`GET /api/students/current_writing/`**: Get a scrambled sentence task for drag-and-drop.
+- **`GET /api/students/speaking_recent/`**: Quick dial for recent friends.
+- **`GET /api/students/speaking_history/`**: Full history with recording playback.
+- **`POST /api/students/speaking_save/`**: Save a call log (Requires Mandatory Audio).
+- **`POST /api/students/log_activity/`**: General XP logging for quizzes.
+- **`POST /api/students/update_photo/`**: Profile picture management.
+
+---
+
+## 2. Social & Safety Enforcement
+- **Friendships Required**: Students must accept friend requests before calling each other.
+- **Privacy Controls**: Added `is_dnd` (Do Not Disturb) and `is_online` status tracking.
+- **API Endpoints**:
+  - `POST /api/social/send_request/`: Send request by username.
+  - `POST /api/social/{id}/respond_request/`: Accept/Reject (action: 'ACCEPT'/'REJECT').
+  - `POST /api/social/toggle_status/`: Toggle 'ONLINE' or 'DND' (type: 'ONLINE'/'DND').
+  - `GET /api/social/list_friends/`: See availability of all your friends.
+
+---
+
+## 3. Mandatory Call Recordings
+- Enforced that every call saved to the system *must* have an associated audio recording file.
+- The system rejects attempts to save a call log without an audio file with a `400 Bad Request`.
+
+---
+
+## 4. Admin Panel & Progress Monitoring
+- **Real-time Monitoring**: Admins can see who is online, who is in DND, and browse call recordings directly from the dashboard.
+- **XP Distribution**: Points are automatically calculated and distributed to specific categories (Speaking, Listening, etc.) on every save.
+
+Verification: No lint errors in [urls.py](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/natdemy_english/urls.py) or [views.py](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/core_api/views.py). Server is running successfully.

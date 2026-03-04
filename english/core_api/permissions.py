@@ -3,7 +3,7 @@ from rest_framework import permissions
 class IsApprovedStudent(permissions.BasePermission):
     """
     Custom permission to only allow students approved by the admin 
-    to access the Antigravity app data.
+    OR superusers to access the Antigravity app data.
     """
     
     def has_permission(self, request, view):
@@ -11,8 +11,11 @@ class IsApprovedStudent(permissions.BasePermission):
         if not (request.user and request.user.is_authenticated):
             return False
             
-        # Step 2: Check if the user has a profile and if that profile is approved
-        # This prevents the app from crashing if a user exists without a profile
+        # Step 2: Admins (superusers) always have permission
+        if request.user.is_superuser:
+            return True
+
+        # Step 3: Check if the student has an approved profile
         try:
             return request.user.profile.is_approved
         except AttributeError:
@@ -20,4 +23,15 @@ class IsApprovedStudent(permissions.BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        # Superusers can access any object
+        if request.user.is_superuser:
+            return True
+        # Students can only access their own objects (where applicable)
+        return hasattr(obj, 'user') and obj.user == request.user
+
+class IsSuperUser(permissions.BasePermission):
+    """
+    Custom permission to only allow superusers to perform management tasks.
+    """
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_superuser)

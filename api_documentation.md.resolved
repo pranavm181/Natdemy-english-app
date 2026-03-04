@@ -1,0 +1,150 @@
+# Natdemy English API Documentation
+
+Welcome to the Natdemy English API. All endpoints (except Login/Register) require an `Authorization: Bearer <token>` header.
+
+---
+
+## 🔐 1. Authentication
+Endpoints for logging in and managing session tokens.
+
+### **Login**
+- **URL**: `/api/login/`
+- **Method**: `POST`
+- **Body**:
+  ```json
+  {
+      "username": "student1",
+      "password": "password123"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+      "refresh": "...",
+      "access": "..."
+  }
+  ```
+
+### **Refresh Token**
+- **URL**: `/api/token/refresh/`
+- **Method**: `POST`
+- **Body**: `{ "refresh": "..." }`
+
+---
+
+## 🛠️ 2. Administration (Admin Only)
+These endpoints require administrative privileges.
+
+### **Register Student**
+- **URL**: `/api/admin/register-student/`
+- **Method**: `POST`
+- **Body**:
+  ```json
+  {
+      "username": "new_student",
+      "password": "secure_password",
+      "email": "student@example.com"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+      "message": "Student account created by admin successfully.",
+      "username": "new_student",
+      "student_id": "NAT-0006"
+  }
+  ```
+
+---
+
+## 📊 3. Student Analytics & Dashboard
+Core endpoints for tracking progress.
+
+### **Detailed Dashboard**
+- **URL**: `/api/students/dashboard/`
+- **Method**: `GET`
+- **Description**: Returns XP progress, levels, and Gemini AI stats.
+- **Example Response**:
+  ```json
+  {
+      "overall_level": "BEGINNER",
+      "total_xp": 450,
+      "section_progress": {
+          "Listening": { "current_level": "BEGINNER", "percent": 15 },
+          "Speaking": { ... }
+      },
+      "needs_improvement": "Writing"
+  }
+  ```
+
+---
+
+## 📚 4. Skill Sections (Training)
+Interactive learning modules for different skills.
+
+### **Listening Lesson**
+- **URL**: `/api/listening/`
+- **Method**: `GET`
+- **Response**: Returns a random YouTube video and quiz questions suitable for the student's level.
+
+### **Reading Story**
+- **URL**: `/api/reading/`
+- **Method**: `GET`
+- **Response**: Returns a story with Malayalam context and multiple-choice questions.
+
+### **Writing Task**
+- **URL**: `/api/writing/`
+- **Method**: `GET`
+- **Response**: Returns a scrambled sentence task (ordered words and extra distractor words).
+
+---
+
+## 📞 5. Speaking & Call History
+Handles mandatory call recordings and call logs.
+
+### **Save Call Recording**
+- **URL**: `/api/speaking/save/`
+- **Method**: `POST`
+- **Content-Type**: `multipart/form-data`
+- **Form Data**:
+  - `duration_seconds`: `120`
+  - `contact_name`: `Gemini` or `Username`
+  - [audio](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/core_api/admin.py#114-118): `[Binary Audio File]` (MANDATORY)
+- **Error (400)**: If [audio](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/core_api/admin.py#114-118) is missing.
+- **Error (403)**: If `contact_name` is not "Gemini" and is not a mutual friend.
+
+### **Call History**
+- **URL**: `/api/speaking/history/`
+- **Method**: `GET`
+- **Example Response**:
+  ```json
+  [
+      {
+          "id": 12,
+          "name": "Gemini",
+          "duration": 45,
+          "recording_url": "http://.../media/calls/rec.mp3"
+      }
+  ]
+  ```
+
+---
+
+## 🤝 6. Social Networking
+Managing friends and availability status.
+
+### **List Friends**
+- **URL**: `/api/social/list-friends/`
+- **Method**: `GET`
+- **Response**: Returns list of friends with `is_online`, `is_dnd`, and `can_call` flags.
+
+### **Send Friend Request**
+- **URL**: `/api/social/send-request/`
+- **Method**: `POST`
+- **Body**: `{ "username": "friend_user" }`
+
+### **Toggle Status**
+- **URL**: `/api/social/toggle-status/`
+- **Method**: `POST`
+- **Body**: `{ "type": "ONLINE" }` or `{ "type": "DND" }`
+- **Response**: Current status of flags.
