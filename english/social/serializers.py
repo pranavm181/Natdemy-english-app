@@ -1,11 +1,25 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import CallLog, FriendRequest
+from .models import CallLog, FriendRequest, SpeakingTopic, ActiveCall
 
 class UserMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username']
+
+class SpeakingTopicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpeakingTopic
+        fields = '__all__'
+
+class ActiveCallSerializer(serializers.ModelSerializer):
+    caller_details = UserMinimalSerializer(source='caller', read_only=True)
+    receiver_details = UserMinimalSerializer(source='receiver', read_only=True)
+    topic_details = SpeakingTopicSerializer(source='topic', read_only=True)
+
+    class Meta:
+        model = ActiveCall
+        fields = ['id', 'caller', 'receiver', 'topic', 'caller_details', 'receiver_details', 'topic_details', 'is_active', 'created_at']
 
 class CallLogSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,0 +1,140 @@
+# Natdemy English Academy - Ultimate API Reference
+
+This document provides 100% coverage of all endpoints available in the Natdemy ecosystem. Optimized for PDF export.
+
+---
+
+## 🔐 1. Authentication & Security
+All endpoints (except Login) REQUIRE: `Authorization: Bearer <token>`
+
+### **Login (Obtain Token)**
+- **Endpoint**: `/api/login/`
+- **Method**: `POST`
+- **Payload**: `{ "username": "admin", "password": "..." }`
+- **Response**: `{ "access": "ACCESS_TOKEN", "refresh": "REFRESH_TOKEN" }`
+
+### **Token Refresh**
+- **Endpoint**: `/api/token/refresh/`
+- **Method**: `POST`
+- **Payload**: `{ "refresh": "REFRESH_TOKEN" }`
+
+---
+
+## 👤 2. User Profile & Account
+
+### **Get Current Profile**
+- **Endpoint**: `/api/students/dashboard/`
+- **Method**: `GET`
+- **Details**: Returns basic profile data, total XP, and current levels.
+
+### **Update Profile Photo**
+- **Endpoint**: `/api/students/update-photo/`
+- **Method**: `POST` (Multi-part)
+- **Field**: [photo](file:///c:/Users/aswin/OneDrive/Desktop/SKILL%20PARK/APPS/ENGLISH/english/core_api/views.py#397-408) (File)
+
+### **Admin: Register Student**
+- **Endpoint**: `/api/admin/register-student/`
+- **Method**: `POST`
+- **Payload**: `{ "username": "...", "password": "...", "email": "..." }`
+
+---
+
+## 📊 3. Analytics & Progress Tracking
+
+### **Comprehensive Dashboard**
+- **Endpoint**: `/api/students/detailed_dashboard/`
+- **Method**: `GET`
+- **Returns**: XP breakdown per section, current level percentage, and Gemini AI call stats.
+
+### **Weekly Analytics**
+- **Endpoint**: `/api/students/analytics/weekly/`
+- **Method**: `GET`
+- **Returns**: Daily average scores and time spent over the last 7 days.
+
+### **Digital Wellbeing**
+- **Endpoint**: `/api/students/wellbeing/`
+- **Method**: `GET`
+- **Returns**: Stacked time breakdown (Listening vs Reading vs Writing etc.) for the week.
+
+---
+
+## 📚 4. Curriculum & Learning
+Mastering items (Score ≥ 80%) is required for Level Advancement.
+
+### **Listening Section**
+- **Endpoint**: `/api/listening/`
+- **Method**: `GET`
+- **Returns**: Level-appropriate YouTube lessons and quiz questions.
+
+### **Reading Section**
+- **Endpoint**: `/api/reading/`
+- **Method**: `GET`
+- **Returns**: Illustrated stories and comprehension quizzes.
+
+### **Writing Section**
+- **Endpoint**: `/api/writing/`
+- **Method**: `GET`
+- **Returns**: Scrambled sentence translation tasks.
+
+### **Grammar (Learning) Section**
+- **Endpoints**: 
+    - `/api/learning/chapters/` (Rules & Structure)
+    - `/api/learning/examples/` (Sentence Practice)
+    - `/api/learning/quizzes/` (Mastery Check)
+
+### **LOG ACTIVITY (MUST CALL)**
+- **Endpoint**: `/api/students/log-activity/`
+- **Method**: `POST`
+- **Payload**:
+  ```json
+  {
+      "activity_type": "LISTENING", // L/R/W/LEARNING
+      "duration_minutes": 15,
+      "quiz_score": 90,
+      "item_id": 12, // ID of lesson/story
+      "xp_earned": 5
+  }
+  ```
+
+---
+
+## 🤝 5. Social & Friends
+
+### **Friends & Presence**
+- **List Friends**: `GET /api/social/list-friends/`
+- **Toggle Status**: `POST /api/social/toggle-status/` (`{"type": "ONLINE/DND"}`)
+- **Remove Friend**: `POST /api/social/remove_friend/` (`{"username": "..."}`)
+
+### **Friend Requests**
+- **Send Request**: `POST /api/social/send-request/` (`{"username": "..."}`)
+- **Respond**: `POST /api/social/respond-request/<req_id>/` (`{"action": "ACCEPT/REJECT"}`)
+
+---
+
+## 📞 6. Calls & Speaking Topics
+
+### **Call Setup**
+- **Get Random Topic**: `GET /api/social/calls/random_topic/`
+- **Initiate Call**: `POST /api/social/calls/initiate_call/` (`{"receiver_name": "...", "topic_id": ...}`)
+- **Check Current Call**: `GET /api/social/calls/current_call/` (Syncs topic for both participants)
+- **End Call**: `POST /api/social/calls/end_call/`
+
+### **History & Recordings**
+- **Recent Contacts**: `GET /api/social/calls/speaking_recent/`
+- **Full History**: `GET /api/social/calls/speaking_history/`
+- **Save Recording**: `POST /api/social/calls/speaking_save/` (Multi-part: `duration_seconds`, `contact_name`, `recording_file`)
+
+---
+
+## ⚡ 7. XP & Level Logic (Legacy vs New)
+- **XP Management**: `GET /api/xp-config/` (Admin)
+- **Current Rules**: Levels are **NOT** XP-based. Advancement requires **100% completion** of all items in the current level across Listening, Reading, Writing, and Grammar.
+
+---
+
+## 📁 Media Assets
+- **Base URL**: `http://<domain>/media/`
+- **Profile Photos**: `media/profile_photos/`
+- **Call Recordings**: `media/calls/`
+- **Reading Assets**: `media/stories/`
+- **Method**: `POST`

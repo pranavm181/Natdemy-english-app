@@ -6,6 +6,7 @@ class ListeningLesson(models.Model):
     title = models.CharField(max_length=100)
     youtube_url = models.URLField()
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
+    xp_reward = models.IntegerField(default=5)
     
     def __str__(self):
         return f"[{self.level}] {self.title}"

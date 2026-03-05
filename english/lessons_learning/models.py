@@ -4,6 +4,12 @@ class Chapter(models.Model):
     order = models.IntegerField(unique=True)
     title = models.CharField(max_length=200)
     grammar_rule_malayalam = models.TextField()
+    level = models.CharField(
+        max_length=20, 
+        choices=[('BEGINNER', 'Beginner'), ('INTERMEDIATE', 'Intermediate'), ('PROFESSIONAL', 'Professional')], 
+        default='BEGINNER'
+    )
+    xp_reward = models.IntegerField(default=5)
 
     def __str__(self):
         return f"Chapter {self.order}: {self.title}"

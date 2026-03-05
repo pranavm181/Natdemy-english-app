@@ -1,6 +1,6 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import StudentProfile, ActivityLog
+from .models import StudentProfile, ActivityLog, GlobalXPConfig
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,7 +48,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
-        fields = ['id', 'activity_type', 'duration_minutes', 'quiz_score', 'timestamp']
+        fields = ['id', 'activity_type', 'duration_minutes', 'quiz_score', 'xp_earned', 'item_id', 'timestamp']
         read_only_fields = ['id', 'timestamp']
 
 class AdminRegistrationSerializer(serializers.ModelSerializer):
@@ -72,3 +72,8 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class GlobalXPConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GlobalXPConfig
+        fields = '__all__'

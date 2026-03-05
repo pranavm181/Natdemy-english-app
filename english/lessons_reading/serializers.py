@@ -11,7 +11,7 @@ class ReadingStorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingStory
-        fields = ['id', 'title', 'level', 'story_content', 'background_image_url', 'questions']
+        fields = ['id', 'title', 'level', 'story_content', 'background_image_url', 'xp_reward', 'questions']
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions', [])
@@ -28,6 +28,7 @@ class ReadingStorySerializer(serializers.ModelSerializer):
         instance.level = validated_data.get('level', instance.level)
         instance.story_content = validated_data.get('story_content', instance.story_content)
         instance.background_image_url = validated_data.get('background_image_url', instance.background_image_url)
+        instance.xp_reward = validated_data.get('xp_reward', instance.xp_reward)
         instance.save()
 
         # Simple nested update: clear and recreate

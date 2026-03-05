@@ -9,8 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 # Import models & serializers from core_api
-from .models import StudentProfile, ActivityLog
-from .serializers import StudentProfileSerializer, ActivityLogSerializer
+from .models import StudentProfile, ActivityLog, GlobalXPConfig
+from .serializers import StudentProfileSerializer, ActivityLogSerializer, GlobalXPConfigSerializer
 from django.db.models import Count, Sum, Avg
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 
@@ -28,6 +28,7 @@ from lessons_writing.views import WritingMixin
 from lessons_learning.views import LearningMixin
 from social.views import SpeakingMixin
 from social.models import CallLog
+from social.serializers import CallLogSerializer
 
 class AnalyticsMixin:
     @action(detail=False, methods=['get'])
@@ -368,10 +369,15 @@ class StudentViewSet(viewsets.GenericViewSet,
         for t in trend:
             trend_data[str(t['day'])] = round(t['total'], 1)
 
+        # 4. Call History
+        call_logs = CallLog.objects.filter(student=user).order_by('-timestamp')
+        call_data = CallLogSerializer(call_logs, many=True).data
+
         return Response({
             "profile": StudentProfileSerializer(profile).data,
             "section_summary": section_summary,
             "recent_activity": log_data,
+            "call_history": call_data,
             "wellbeing_trend": trend_data
         })
 
@@ -399,3 +405,25 @@ class StudentViewSet(viewsets.GenericViewSet,
                 "url": request.build_absolute_uri(profile.profile_photo.url)
             })
         return Response({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+class GlobalXPConfigViewSet(viewsets.ModelViewSet):
+    """
+    Admin-only viewset to manage XP Thresholds and Rewards.
+    """
+    queryset = GlobalXPConfig.objects.all()
+    serializer_class = GlobalXPConfigSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        config = GlobalXPConfig.get_config()
+        serializer = self.get_serializer(config)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post', 'patch'])
+    def update_config(self, request):
+        config = GlobalXPConfig.get_config()
+        serializer = self.get_serializer(config, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

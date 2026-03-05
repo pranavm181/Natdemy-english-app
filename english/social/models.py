@@ -41,3 +41,30 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
+
+class SpeakingTopic(models.Model):
+    LEVEL_CHOICES = [
+        ('BEGINNER', 'Beginner'),
+        ('INTERMEDIATE', 'Intermediate'),
+        ('PROFESSIONAL', 'Professional'),
+    ]
+    text = models.CharField(max_length=500)
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='BEGINNER')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.level}] {self.text[:50]}..."
+
+class ActiveCall(models.Model):
+    caller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='initiated_calls')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_calls')
+    topic = models.ForeignKey(SpeakingTopic, on_delete=models.SET_NULL, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Ended"
+        return f"{self.caller.username} -> {self.receiver.username} ({status})"

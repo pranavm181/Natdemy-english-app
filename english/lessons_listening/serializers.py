@@ -11,7 +11,7 @@ class ListeningLessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ListeningLesson
-        fields = ['id', 'title', 'youtube_url', 'level', 'questions']
+        fields = ['id', 'title', 'youtube_url', 'level', 'xp_reward', 'questions']
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions', [])
@@ -27,6 +27,7 @@ class ListeningLessonSerializer(serializers.ModelSerializer):
         instance.title = validated_data.get('title', instance.title)
         instance.youtube_url = validated_data.get('youtube_url', instance.youtube_url)
         instance.level = validated_data.get('level', instance.level)
+        instance.xp_reward = validated_data.get('xp_reward', instance.xp_reward)
         instance.save()
 
         # Simple nested update: clear and recreate

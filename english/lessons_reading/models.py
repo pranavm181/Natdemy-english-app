@@ -7,6 +7,7 @@ class ReadingStory(models.Model):
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
     story_content = models.TextField()
     background_image_url = models.URLField()
+    xp_reward = models.IntegerField(default=5)
 
     def __str__(self):
         return self.title

@@ -132,7 +132,9 @@ async function loadPage(pageId, pageNum = 1, searchQuery = state.currentSearch) 
         case 'listening': renderCRUD('listening', 'Listening Lessons'); break;
         case 'reading': renderCRUD('reading', 'Reading Stories'); break;
         case 'writing': renderCRUD('writing', 'Writing Tasks'); break;
+        case 'speaking-topics': renderCRUD('social/topics', 'Speaking Topics'); break;
         case 'learning': renderLearning(); break;
+        case 'xp-manage': renderXPManagement(); break;
     }
 }
 
@@ -330,6 +332,7 @@ async function renderStudents() {
                 <table>
                     <thead>
                         <tr>
+                            <th style="width: 50px;">S.No</th>
                             <th>Student ID</th>
                             <th>Username</th>
                             <th>Points (XP)</th>
@@ -338,8 +341,9 @@ async function renderStudents() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${students.map(student => `
+                        ${students.map((student, index) => `
                             <tr>
+                                <td style="color: var(--text-muted); font-size: 0.8rem;">${(state.currentPageNum - 1) * 10 + index + 1}</td>
                                 <td style="font-family: monospace; font-size: 0.8rem;">${student.student_id}</td>
                                 <td style="font-weight: 600;">${student.username}</td>
                                 <td>${student.total_xp} XP</td>
@@ -350,11 +354,11 @@ async function renderStudents() {
                                 </td>
                                 <td>
                                     <div style="display:flex; gap:0.5rem;">
-                                        <button class="btn ${student.is_approved ? 'btn-danger' : 'btn-primary'}" 
-                                                onclick="toggleApproval('${student.id}', ${student.is_approved})"
-                                                style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
-                                            ${student.is_approved ? 'Suspend' : 'Approve'}
-                                        </button>
+                                        <label class="switch" title="${student.is_approved ? 'Suspend Student' : 'Approve Student'}">
+                                            <input type="checkbox" ${student.is_approved ? 'checked' : ''} 
+                                                   onchange="toggleApproval('${student.id}', ${student.is_approved})">
+                                            <span class="slider round"></span>
+                                        </label>
                                         <button class="btn" onclick="openEntityModal('students', ${student.id})" 
                                                 style="background:rgba(255, 255, 255, 0.05); padding: 0.4rem 0.6rem;" title="Edit Profile">
                                             ✏️
@@ -521,7 +525,8 @@ window.openEntityModal = async function (type, id) {
         listening: ['title', 'youtube_url', 'level'],
         reading: ['title', 'level', 'story_content', 'background_image_url'],
         writing: ['level', 'malayalam_meaning', 'correct_sentence', 'extra_words'],
-        'learning/chapters': ['order', 'title', 'grammar_rule_malayalam']
+        'learning/chapters': ['order', 'title', 'grammar_rule_malayalam', 'level'],
+        'social/topics': ['text', 'level']
     };
 
     config[type].forEach(key => {
@@ -887,7 +892,7 @@ window.viewStudentReport = async function (studentId) {
         return;
     }
 
-    const { profile, section_summary, recent_activity, wellbeing_trend } = res.data;
+    const { profile, section_summary, recent_activity, wellbeing_trend, call_history } = res.data;
 
     let activityHtml = recent_activity.length > 0 ?
         recent_activity.map(log => `
@@ -898,6 +903,23 @@ window.viewStudentReport = async function (studentId) {
                 <td style="font-weight:700;">${log.quiz_score !== null ? log.quiz_score + '%' : '-'}</td>
             </tr>
         `).join('') : `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">No recent activities logged.</td></tr>`;
+
+    let callHistoryHtml = call_history && call_history.length > 0 ?
+        call_history.map(call => `
+            <tr>
+                <td>${new Date(call.timestamp).toLocaleString()}</td>
+                <td style="font-weight:600; color:var(--primary);">${call.call_type} (${call.contact_name || 'Gemini'})</td>
+                <td>${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s</td>
+                <td>
+                    ${call.recording_file ? `
+                        <audio controls style="height: 30px; width: 180px;">
+                            <source src="${call.recording_file}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    ` : '<span style="color:var(--text-muted);">No recording</span>'}
+                </td>
+            </tr>
+        `).join('') : `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">No call history found.</td></tr>`;
 
     content.innerHTML = `
         <div style="display:flex; align-items:center; gap:1.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
@@ -935,7 +957,7 @@ window.viewStudentReport = async function (studentId) {
         </div>
 
         <h3 style="margin-top:2.5rem;">Recent Activity Logs</h3>
-        <div class="table-container">
+        <div class="table-container" style="margin-bottom: 2.5rem;">
             <table class="report-log-table">
                 <thead>
                     <tr>
@@ -950,9 +972,157 @@ window.viewStudentReport = async function (studentId) {
                 </tbody>
             </table>
         </div>
+
+        <h3>History & Call Recordings</h3>
+        <div class="table-container">
+            <table class="report-log-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Contact</th>
+                        <th>Duration</th>
+                        <th>Playback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${callHistoryHtml}
+                </tbody>
+            </table>
+        </div>
     `;
 };
 
 window.closeReportModal = function () {
     document.getElementById('report-modal').classList.remove('active');
 };
+
+// --- XP MANAGEMENT ---
+async function renderXPManagement() {
+    elements.pageTitle.innerText = "XP Management";
+    elements.pageSubtitle.innerText = "Configure global level logic and override student progress.";
+
+    const [configRes, studentsRes] = await Promise.all([
+        api.fetch('/xp-config/'),
+        api.fetch(`/students/`)
+    ]);
+
+    if (!configRes.ok || !studentsRes.ok) return;
+
+    const config = configRes.data;
+
+    // Helper to render a compact section card
+    const renderSectionCard = (title, icon, type) => `
+        <div class="xp-dashboard-card">
+            <header>
+                <i class="fas ${icon}"></i>
+                <h4>${title} Progression</h4>
+            </header>
+            <form onsubmit="window.saveXPConfig(event)">
+                <div class="xp-track mini">
+                    <div class="lvl-card">
+                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">REWARD FOR BEG</label>
+                        <input type="number" name="${type.toLowerCase()}_beginner_xp" class="xp-arrow-input" value="${config[type.toLowerCase() + '_beginner_xp']}">
+                    </div>
+                    <div class="xp-arrow-container">
+                        <div class="xp-arrow"></div>
+                    </div>
+                    <div class="lvl-card">
+                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">REWARD FOR INT</label>
+                        <input type="number" name="${type.toLowerCase()}_intermediate_xp" class="xp-arrow-input" value="${config[type.toLowerCase() + '_intermediate_xp']}">
+                    </div>
+                    <div class="xp-arrow-container">
+                        <div class="xp-arrow"></div>
+                    </div>
+                    <div class="lvl-card">
+                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">REWARD FOR PRO</label>
+                        <input type="number" name="${type.toLowerCase()}_professional_xp" class="xp-arrow-input" value="${config[type.toLowerCase() + '_professional_xp']}">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.4rem 1rem;">Save ${title}</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    elements.mainView.innerHTML = `
+        <div class="animate-in">
+            <!-- Top Section: System Thresholds -->
+            <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--accent); font-size: 1.1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-project-diagram"></i> Global XP Engine
+                </h3>
+                <form onsubmit="window.saveXPConfig(event)" style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                    <div class="xp-track mini" style="flex: 1; min-width: 400px;">
+                        <div class="lvl-card">
+                            <h4>BEGINNER</h4>
+                            <span>0 XP (Start)</span>
+                        </div>
+                        <div class="xp-arrow-container">
+                            <div class="xp-arrow-label" style="top: -25px;"><label style="font-size: 0.65rem; color: var(--accent);">PROMOTES TO INT @</label></div>
+                            <div class="xp-arrow-label"><input type="number" name="overall_intermediate" class="xp-arrow-input" value="${config.overall_intermediate}"></div>
+                            <div class="xp-arrow"></div>
+                        </div>
+                        <div class="lvl-card">
+                            <h4>INTERMEDIATE</h4>
+                            <span>Min: ${config.overall_intermediate} XP</span>
+                        </div>
+                        <div class="xp-arrow-container">
+                            <div class="xp-arrow-label" style="top: -25px;"><label style="font-size: 0.65rem; color: var(--accent);">PROMOTES TO PRO @</label></div>
+                            <div class="xp-arrow-label"><input type="number" name="overall_professional" class="xp-arrow-input" value="${config.overall_professional}"></div>
+                            <div class="xp-arrow"></div>
+                        </div>
+                        <div class="lvl-card">
+                            <h4>PROFESSIONAL</h4>
+                            <span>Min: ${config.overall_professional} XP</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height: 40px; padding: 0 1.5rem;">Save Engine</button>
+                </form>
+            </div>
+
+            <!-- Main Grid: Section Rewards -->
+            <div class="xp-dashboard-grid">
+                ${renderSectionCard('Listening', 'fa-headphones', 'Listening')}
+                ${renderSectionCard('Speaking', 'fa-microphone', 'Speaking')}
+                ${renderSectionCard('Reading', 'fa-book-open', 'Reading')}
+                ${renderSectionCard('Writing', 'fa-pen-fancy', 'Writing')}
+                ${renderSectionCard('Grammar', 'fa-graduation-cap', 'Learning')}
+            </div>
+
+            <!-- Bottom Row: Note -->
+            <div style="margin-top: 1.5rem;">
+                <div class="glass" style="padding: 1rem; border-style: dashed; border-color: var(--accent); display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-info-circle" style="color: var(--accent); font-size: 1rem;"></i>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.3;">
+                        <strong>Note:</strong> All sections now follow a level-based automated reward system.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+window.saveXPConfig = async function (e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const body = Object.fromEntries(formData.entries());
+
+    // Convert to numbers
+    for (let key in body) body[key] = parseInt(body[key]);
+
+    const res = await api.fetch('/xp-config/', {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+        alert("Global XP Logic Updated Successfully!");
+        renderXPManagement();
+    } else {
+        alert("Failed to update global config.");
+    }
+};
+
+
+// Removed window.saveStudentXP as per manual override removal

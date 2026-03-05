@@ -18,4 +18,7 @@ urlpatterns = [
     path('students/update-photo/', views.StudentViewSet.as_view({'post': 'update_photo'})),
     path('students/analytics/weekly/', views.StudentViewSet.as_view({'get': 'weekly_analytics'})),
     path('students/wellbeing/', views.StudentViewSet.as_view({'get': 'digital_wellbeing'})),
+
+    # XP Config
+    path('xp-config/', views.GlobalXPConfigViewSet.as_view({'get': 'current', 'patch': 'update_config', 'post': 'update_config'})),
 ]

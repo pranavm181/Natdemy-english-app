@@ -43,6 +43,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         instance.order = validated_data.get('order', instance.order)
         instance.title = validated_data.get('title', instance.title)
         instance.grammar_rule_malayalam = validated_data.get('grammar_rule_malayalam', instance.grammar_rule_malayalam)
+        instance.xp_reward = validated_data.get('xp_reward', instance.xp_reward)
         instance.save()
 
         # Handle Examples
