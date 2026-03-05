@@ -1,5 +1,4 @@
-from django.contrib import admin
-from .models import CallLog, FriendRequest
+from .models import CallLog, FriendRequest, SpeakingTopic, ActiveCall
 
 @admin.register(CallLog)
 class CallLogAdmin(admin.ModelAdmin):
@@ -10,3 +9,13 @@ class CallLogAdmin(admin.ModelAdmin):
 class FriendRequestAdmin(admin.ModelAdmin):
     list_display = ('from_user', 'to_user', 'status', 'timestamp')
     list_filter = ('status',)
+
+@admin.register(SpeakingTopic)
+class SpeakingTopicAdmin(admin.ModelAdmin):
+    list_display = ('text', 'level', 'created_at')
+    list_filter = ('level',)
+
+@admin.register(ActiveCall)
+class ActiveCallAdmin(admin.ModelAdmin):
+    list_display = ('caller', 'receiver', 'topic', 'is_active', 'created_at')
+    list_filter = ('is_active',)

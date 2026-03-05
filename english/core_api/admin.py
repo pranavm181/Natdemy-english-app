@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import StudentProfile, ActivityLog
+from .models import StudentProfile, ActivityLog, GlobalXPConfig
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
@@ -11,3 +11,7 @@ class StudentProfileAdmin(admin.ModelAdmin):
 class ActivityLogAdmin(admin.ModelAdmin):
     list_display = ('student', 'activity_type', 'duration_minutes', 'quiz_score', 'timestamp')
     list_filter = ('activity_type', 'timestamp')
+
+@admin.register(GlobalXPConfig)
+class GlobalXPConfigAdmin(admin.ModelAdmin):
+    list_display = ('points_per_activity', 'overall_intermediate', 'overall_professional')
