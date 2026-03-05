@@ -267,8 +267,15 @@ def manage_user_profile(sender, instance, created, **kwargs):
 def sync_user_permissions(sender, instance, **kwargs):
     """
     Syncs StudentProfile.is_approved with User.is_active.
-    Also ensures students handled via this profile never gain admin perms.
+    Ensures students stay students, but PROTECTS superusers/staff.
     """
+    user = instance.user
+    # If the user is a superuser or staff, we should NOT strip their permissions
+    if user.is_superuser or user.is_staff:
+        # We also ensure superusers are always "approved" in their profile
+        if not instance.is_approved:
+            StudentProfile.objects.filter(id=instance.id).update(is_approved=True)
+        return
     # We use .update() to avoid triggering the User.post_save signal recursively
     User.objects.filter(id=instance.user.id).update(
         is_active=instance.is_approved,

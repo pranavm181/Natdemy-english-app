@@ -1,3 +1,4 @@
+from django.contrib import admin
 from .models import CallLog, FriendRequest, SpeakingTopic, ActiveCall
 
 @admin.register(CallLog)

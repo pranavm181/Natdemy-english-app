@@ -1,3 +1,4 @@
+from django.contrib import admin
 from .models import ReadingStory, ReadingQuestion
 
 class ReadingQuestionInline(admin.TabularInline):
