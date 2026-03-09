@@ -221,6 +221,12 @@ class ActivityLog(models.Model):
                     
                     if self.activity_type == 'LEARNING' and self.quiz_score and self.quiz_score >= 70:
                         profile.unlocked_chapter += 1
+                        # Update state to point to next chapter
+                        from .models import StudentState
+                        state, _ = StudentState.objects.get_or_create(student=self.student)
+                        state.last_activity_type = 'LEARNING'
+                        state.last_item_id = profile.unlocked_chapter
+                        state.save()
                         
                     profile.save()
             except Exception:
@@ -282,3 +288,27 @@ def sync_user_permissions(sender, instance, **kwargs):
         is_staff=False,
         is_superuser=False
     )
+# --- STUDENT STATE (Persistent App State) ---
+
+class StudentState(models.Model):
+    """
+    Stores 'live' app state, draft content, and last accessed items 
+    to allow resuming from the last point.
+    """
+    student = models.OneToOneField(User, on_delete=models.CASCADE, related_name='state')
+    last_activity_type = models.CharField(max_length=20, blank=True, null=True)
+    last_item_id = models.IntegerField(blank=True, null=True)
+    live_data = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"State for {self.student.username}"
+
+@receiver(post_save, sender=User)
+def manage_student_state(sender, instance, created, **kwargs):
+    """Ensures every user has a StudentState object."""
+    if created:
+        StudentState.objects.get_or_create(student=instance)
+    else:
+        if not hasattr(instance, 'state'):
+            StudentState.objects.get_or_create(student=instance)

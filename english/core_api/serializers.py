@@ -1,6 +1,12 @@
 ﻿from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import StudentProfile, ActivityLog, GlobalXPConfig
+from .models import StudentProfile, ActivityLog, GlobalXPConfig, StudentState
+
+class StudentStateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentState
+        fields = ['last_activity_type', 'last_item_id', 'live_data', 'updated_at']
+        read_only_fields = ['updated_at']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

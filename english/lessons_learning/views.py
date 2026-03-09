@@ -42,10 +42,14 @@ class LearningMixin:
 from rest_framework.pagination import PageNumberPagination
 
 class ChapterViewSet(viewsets.ModelViewSet, LearningMixin):
-    queryset = Chapter.objects.all().order_by('order')
     serializer_class = ChapterSerializer
     pagination_class = PageNumberPagination
     search_fields = ['title', 'grammar_rule_malayalam']
+
+    def get_queryset(self):
+        # We now return all chapters, and the 'is_locked' field in the serializer
+        # tells the frontend which ones are playable.
+        return Chapter.objects.all().order_by('order')
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'current_learning']:

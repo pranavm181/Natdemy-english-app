@@ -289,14 +289,20 @@ window.switchActivityChart = function (type) {
     container.innerHTML = displayData.map(d => {
         const date = new Date(d.period);
         let label = '';
-        if (type === 'daily') label = date.toLocaleDateString(undefined, { weekday: 'short' });
-        else if (type === 'weekly') label = 'W' + Math.ceil(date.getDate() / 7);
-        else if (type === 'monthly') label = date.toLocaleDateString(undefined, { month: 'short' });
-        else label = date.getFullYear();
+        if (type === 'daily') {
+            label = date.toLocaleDateString(undefined, { weekday: 'short' });
+        } else if (type === 'weekly') {
+            // Show start of week (e.g., "Mar 02")
+            label = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } else if (type === 'monthly') {
+            label = date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+        } else {
+            label = date.getFullYear();
+        }
 
         return `
             <div class="chart-bar" style="height: ${(d.count / maxCount) * 100}%">
-                <div class="chart-tooltip">${d.count} actions</div>
+                <div class="chart-tooltip">${d.count} actions (${date.toLocaleDateString()})</div>
                 <span class="chart-label">${label}</span>
             </div>
         `;

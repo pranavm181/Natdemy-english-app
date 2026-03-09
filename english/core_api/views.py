@@ -6,11 +6,13 @@ import io
 from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 # Import models & serializers from core_api
-from .models import StudentProfile, ActivityLog, GlobalXPConfig
-from .serializers import StudentProfileSerializer, ActivityLogSerializer, GlobalXPConfigSerializer
+from .models import StudentProfile, ActivityLog, GlobalXPConfig, StudentState
+from .serializers import StudentProfileSerializer, ActivityLogSerializer, GlobalXPConfigSerializer, StudentStateSerializer
 from django.db.models import Count, Sum, Avg
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 
@@ -31,6 +33,13 @@ from social.models import CallLog
 from social.serializers import CallLogSerializer
 
 class AnalyticsMixin:
+    def get_trend_data(self, queryset, trunc_func, periods, date_field='timestamp'):
+        trend = queryset.annotate(period=trunc_func(date_field)) \
+                        .values('period') \
+                        .annotate(count=Count('id')) \
+                        .order_by('-period')[:periods]
+        return list(trend)
+
     @action(detail=False, methods=['get'])
     def weekly_analytics(self, request):
         last_7_days = timezone.now() - timedelta(days=7)
@@ -72,6 +81,12 @@ class AnalyticsMixin:
             "total_xp": profile.total_xp,
             "section_progress": section_progress,
             "chart_data": xp_sections,
+            "activity_stats": {
+                "daily": self.get_trend_data(ActivityLog.objects.filter(student=request.user), TruncDay, 30),
+                "weekly": self.get_trend_data(ActivityLog.objects.filter(student=request.user), TruncWeek, 12),
+                "monthly": self.get_trend_data(ActivityLog.objects.filter(student=request.user), TruncMonth, 12),
+                "yearly": self.get_trend_data(ActivityLog.objects.filter(student=request.user), TruncYear, 5),
+            },
             "needs_improvement": needs_improvement,
             "gemini_stats": {
                 "total_calls": gemini_calls.count(),
@@ -304,19 +319,11 @@ class StudentViewSet(viewsets.GenericViewSet,
             "chapters": Chapter.objects.count()
         }
 
-        # 3. Activity Aggregation Helper
-        def get_trend(queryset, trunc_func, periods, date_field='timestamp'):
-            trend = queryset.annotate(period=trunc_func(date_field)) \
-                            .values('period') \
-                            .annotate(count=Count('id')) \
-                            .order_by('-period')[:periods]
-            return list(trend)
-
         activity_stats = {
-            "daily": get_trend(ActivityLog.objects.all(), TruncDay, 30),
-            "weekly": get_trend(ActivityLog.objects.all(), TruncWeek, 12),
-            "monthly": get_trend(ActivityLog.objects.all(), TruncMonth, 12),
-            "yearly": get_trend(ActivityLog.objects.all(), TruncYear, 5),
+            "daily": self.get_trend_data(ActivityLog.objects.all(), TruncDay, 30),
+            "weekly": self.get_trend_data(ActivityLog.objects.all(), TruncWeek, 12),
+            "monthly": self.get_trend_data(ActivityLog.objects.all(), TruncMonth, 12),
+            "yearly": self.get_trend_data(ActivityLog.objects.all(), TruncYear, 5),
         }
 
         return Response({
@@ -394,6 +401,29 @@ class StudentViewSet(viewsets.GenericViewSet,
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get'], url_path='profile-photo')
+    def get_profile_photo(self, request):
+        profile = request.user.profile
+        if profile.profile_photo:
+            return Response({
+                "profile_photo": request.build_absolute_uri(profile.profile_photo.url)
+            })
+        return Response({"profile_photo": None})
+
+    @action(detail=False, methods=['get', 'post', 'patch'])
+    def state(self, request):
+        state = request.user.state
+        if request.method == 'GET':
+            serializer = StudentStateSerializer(state)
+            return Response(serializer.data)
+        
+        # Update logic
+        serializer = StudentStateSerializer(state, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['post'])
     def update_photo(self, request):
         profile = request.user.profile
@@ -427,3 +457,18 @@ class GlobalXPConfigViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

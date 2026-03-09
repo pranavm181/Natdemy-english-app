@@ -7,7 +7,6 @@ urlpatterns = [
     path('students/<int:pk>/', views.StudentViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'})),
     path('students/<int:pk>/student_report/', views.StudentViewSet.as_view({'get': 'student_report'})),
     path('students/dashboard/', views.StudentViewSet.as_view({'get': 'detailed_dashboard'})),
-    path('students/detailed_dashboard/', views.StudentViewSet.as_view({'get': 'detailed_dashboard'})),
     
     # Admin Dashboard (Template Driven)
     path('admin-dashboard/', views_admin.dashboard_view, name='admin-dashboard'),
@@ -16,8 +15,11 @@ urlpatterns = [
     path('students/reports/', views.StudentViewSet.as_view({'get': 'section_reports'})),
     path('students/log-activity/', views.StudentViewSet.as_view({'post': 'log_activity'})),
     path('students/update-photo/', views.StudentViewSet.as_view({'post': 'update_photo'})),
+    path('students/profile-photo/', views.StudentViewSet.as_view({'get': 'get_profile_photo'})),
+    path('students/state/', views.StudentViewSet.as_view({'get': 'state', 'post': 'state', 'patch': 'state'})),
     path('students/analytics/weekly/', views.StudentViewSet.as_view({'get': 'weekly_analytics'})),
     path('students/wellbeing/', views.StudentViewSet.as_view({'get': 'digital_wellbeing'})),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
 
     # XP Config
     path('xp-config/', views.GlobalXPConfigViewSet.as_view({'get': 'current', 'patch': 'update_config', 'post': 'update_config'})),

@@ -18,10 +18,22 @@ class GrammarQuizSerializer(serializers.ModelSerializer):
 class ChapterSerializer(serializers.ModelSerializer):
     examples = GrammarExampleSerializer(many=True, required=False)
     quizzes = GrammarQuizSerializer(many=True, required=False)
+    is_locked = serializers.SerializerMethodField()
 
     class Meta:
         model = Chapter
         fields = '__all__'
+
+    def get_is_locked(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_superuser:
+            return False
+        
+        profile = getattr(request.user, 'profile', None)
+        if profile:
+            # Chapter is locked if its order is greater than unlocked_chapter
+            return obj.order > profile.unlocked_chapter
+        return True
 
     def create(self, validated_data):
         examples_data = validated_data.pop('examples', [])

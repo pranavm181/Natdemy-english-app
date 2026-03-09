@@ -24,9 +24,15 @@ def admin_register_student(request):
     serializer = AdminRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
+        
+        # Auto-approve students created by admin
+        profile = user.profile
+        profile.is_approved = True
+        profile.save()
+        
         return Response({
             "message": "Student account created by admin successfully.",
             "username": user.username,
-            "student_id": user.profile.student_id
+            "student_id": profile.student_id
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

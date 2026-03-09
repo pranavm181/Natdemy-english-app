@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'core_api',
     'lessons_listening',
@@ -142,6 +143,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30), # Long life for mobile app ease
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
 }
 
